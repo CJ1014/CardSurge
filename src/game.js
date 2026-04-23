@@ -130,7 +130,7 @@ async function playRound(state, nextLine) {
     state.playerHand, state.aiHand,
     playerScore, aiScore,
     state.playerChips, state.aiChips,
-    potWon, winner
+    potWon, state.anteAmount, winner
   );
 
   const bestPattern = playerScore.patterns.length
