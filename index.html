@@ -1,142 +1,871 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Card Surge</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0b140b; color: #f5f5f5; font-family: system-ui; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .container { width: 100%; max-width: 900px; padding: 40px 20px; }
-    h1 { font-size: 3rem; margin-bottom: 20px; text-align: center; letter-spacing: 3px; }
-    .screen { display: none; text-align: center; }
-    .screen.active { display: block; }
-    .setup { padding: 40px; background: #1c4a2c; border-radius: 10px; }
-    .field { margin: 20px 0; }
-    label { display: block; margin-bottom: 8px; font-size: 0.9rem; text-transform: uppercase; color: #7a9a7a; }
-    input { padding: 10px; font-size: 1rem; width: 100%; max-width: 200px; background: #1a4a2c; color: white; border: 1px solid #245934; border-radius: 5px; }
-    .buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
-    button { padding: 12px 30px; font-size: 1rem; background: #d4a843; color: #1a0d00; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; }
-    button:hover { background: #e0b857; }
-    .diff { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
-    .diff button { flex: 1; max-width: 100px; background: #245934; color: #7a9a7a; }
-    .diff button.active { background: #d4a843; color: #1a0d00; }
-    .game-header { background: #1c4a2c; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-around; border-radius: 5px; }
-    .stat { font-weight: bold; }
-    .cards { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin: 20px 0; min-height: 120px; }
-    .card { width: 80px; height: 110px; background: white; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px; font-family: Georgia; box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer; }
-    .card:hover { transform: translateY(-8px); box-shadow: 0 8px 20px rgba(0,0,0,0.7); }
-    .card.red { color: #d42020; }
+    /* ── Reset & Variables ────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0b140b;
+      --felt:        #1c4a2c;
+      --felt-light:  #245934;
+      --felt-dark:   #163a22;
+      --gold:        #d4a843;
+      --gold-dim:    #9a7a30;
+      --red-suit:    #d42020;
+      --white:       #f5f5f5;
+      --muted:       #7a9a7a;
+      --card-bg:     #ffffff;
+      --card-border: #d0d0d0;
+      --shadow-card: 3px 5px 16px rgba(0,0,0,0.55);
+      --shadow-deep: 0 8px 32px rgba(0,0,0,0.7);
+      --radius:      10px;
+      --font-card:   Georgia, 'Times New Roman', serif;
+      --font-ui:     system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    html { font-size: 16px; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Screens ──────────────────────────────────────────────────── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+    /* ── Buttons ──────────────────────────────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      color: #1a0d00;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 40px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: var(--font-ui);
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s, filter 0.1s;
+      box-shadow: 0 4px 14px rgba(212,168,67,0.4);
+    }
+    .btn-primary:hover  { filter: brightness(1.12); transform: translateY(-2px); }
+    .btn-primary:active { transform: translateY(0); filter: brightness(0.95); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--muted);
+      border-radius: 8px;
+      padding: 13px 28px;
+      font-size: 0.95rem;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-secondary:hover { color: var(--white); border-color: var(--white); }
+
+    /* ── Setup Screen ─────────────────────────────────────────────── */
+    .start-wrap {
+      width: 100%;
+      max-width: 520px;
+      padding: 48px 24px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+    }
+
+    .logo-block { text-align: center; }
+    .logo-suits {
+      font-size: 2rem;
+      letter-spacing: 12px;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .logo-suits span:nth-child(2),
+    .logo-suits span:nth-child(3) { color: var(--red-suit); }
+    .logo-text {
+      font-size: clamp(2.8rem, 10vw, 4.2rem);
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--white);
+      text-shadow: 0 0 40px rgba(212,168,67,0.3);
+      line-height: 1.05;
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .setup-panel {
+      width: 100%;
+      background: var(--felt-dark);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius);
+      padding: 28px 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      box-shadow: var(--shadow-deep);
+    }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+    .field input {
+      background: var(--felt);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: var(--white);
+      font-size: 1rem;
+      padding: 10px 14px;
+      font-family: var(--font-ui);
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--gold); }
+    .field input::-webkit-inner-spin-button { opacity: 0.5; }
+
+    .fields-row { display: flex; gap: 16px; }
+    .fields-row .field { flex: 1; }
+
+    .diff-group { display: flex; gap: 8px; }
+    .diff-btn {
+      flex: 1;
+      background: var(--felt);
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 7px;
+      padding: 10px 0;
+      font-size: 0.9rem;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .diff-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+    .diff-btn.active {
+      background: var(--felt-light);
+      color: var(--gold);
+      border-color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* Scoring reference */
+    .ref-panel {
+      width: 100%;
+      background: var(--felt-dark);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .ref-panel summary {
+      padding: 14px 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+      user-select: none;
+      list-style: none;
+    }
+    .ref-panel summary:hover { color: var(--white); }
+    .ref-panel[open] summary { border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .ref-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0;
+      padding: 8px 0 4px;
+    }
+    .ref-grid span {
+      padding: 5px 20px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .ref-grid span:nth-child(even) { color: var(--gold); text-align: right; }
+    .ref-note { color: rgba(122,154,122,0.6) !important; font-size: 0.78rem !important; padding-top: 10px !important; }
+
+    /* ── Game Header ──────────────────────────────────────────────── */
+    .game-header {
+      width: 100%;
+      background: var(--felt-dark);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.5);
+    }
+    .hstat {
+      padding: 14px 24px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    .hstat:last-child { border-right: none; }
+    .hstat span { font-weight: 700; font-size: 1.05rem; color: var(--white); margin-left: 4px; }
+    .hpot span { color: var(--gold); }
+    .hyou span { color: #5bc8f5; }
+    .hai  span { color: #f5b842; }
+
+    /* ── Game Body ────────────────────────────────────────────────── */
+    .game-body {
+      width: 100%;
+      max-width: 900px;
+      padding: 24px 20px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .pick-prompt {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.5px;
+      min-height: 1.5em;
+      transition: opacity 0.2s;
+    }
+    .pick-prompt.waiting { color: var(--muted); }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .you-col  { color: #5bc8f5 !important; }
+    .ai-col   { color: #f5b842 !important; }
+
+    .avail-section { text-align: center; }
+    .hands-section {
+      display: flex;
+      gap: 24px;
+    }
+    .hand-block { flex: 1; }
+
+    .live-score {
+      font-size: 0.7rem;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-left: 6px;
+      vertical-align: middle;
+      color: var(--gold);
+    }
+
+    /* ── Card Rows ────────────────────────────────────────────────── */
+    .card-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      min-height: 50px;
+    }
+    .avail-row  { justify-content: center; gap: 20px; }
+    .hand-row   { gap: 8px; min-height: 90px; align-items: flex-start; }
+    .result-row { justify-content: center; gap: 8px; }
+
+    /* ── Card Component ───────────────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      border-radius: 9px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-card);
+      position: relative;
+      font-family: var(--font-card);
+      user-select: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      flex-shrink: 0;
+      width: 64px;
+      height: 90px;
+    }
+
+    /* Available card: larger + interactive */
+    .avail-row .card {
+      width: 100px;
+      height: 140px;
+      cursor: pointer;
+    }
+    .avail-row .card:hover {
+      transform: translateY(-14px) scale(1.05);
+      box-shadow: 0 18px 36px rgba(0,0,0,0.65), 0 0 0 2px var(--gold);
+    }
+    .avail-row .card.disabled {
+      opacity: 0.35;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* Result screen card size */
+    .result-row .card {
+      width: 72px;
+      height: 100px;
+    }
+
+    /* Suit colors */
+    .card.red   { color: var(--red-suit); }
     .card.black { color: #1a1a1a; }
-    .rank { font-size: 14px; font-weight: bold; }
-    .suit { font-size: 24px; }
-    .hand-label { margin-top: 20px; font-size: 0.9rem; color: #7a9a7a; text-transform: uppercase; margin-bottom: 10px; }
-    .result { text-align: center; padding: 40px; }
-    .result h2 { font-size: 2rem; margin-bottom: 20px; }
-    .result-hands { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; margin: 30px 0; }
-    .result-hand { flex: 1; min-width: 200px; }
-    .vs { margin: 0 20px; font-size: 1.5rem; }
+
+    /* Card internals */
+    .card .c-tl {
+      position: absolute;
+      top: 5px; left: 6px;
+      line-height: 1.1;
+      font-weight: bold;
+    }
+    .card .c-br {
+      position: absolute;
+      bottom: 5px; right: 6px;
+      line-height: 1.1;
+      font-weight: bold;
+      transform: rotate(180deg);
+    }
+    .card .c-rank { display: block; font-size: 13px; }
+    .card .c-suit-sm { display: block; font-size: 11px; }
+    .card .c-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    /* Larger center suit for available cards */
+    .avail-row .card .c-center { font-size: 42px; }
+    .avail-row .card .c-rank   { font-size: 18px; }
+    .avail-row .card .c-suit-sm{ font-size: 14px; }
+
+    /* Result screen */
+    .result-row .card .c-center { font-size: 30px; }
+    .result-row .card .c-rank   { font-size: 14px; }
+
+    /* New card pop-in animation */
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(-18px) scale(0.9); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .card.deal-in { animation: card-in 0.22s ease-out; }
+
+    /* ── Round Result Screen ──────────────────────────────────────── */
+    #screen-result { justify-content: flex-start; padding-top: 0; }
+    .result-wrap {
+      width: 100%;
+      max-width: 860px;
+      padding: 32px 20px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .result-banner {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 10px 0;
+    }
+    .result-banner.win  { color: #4ade80; text-shadow: 0 0 24px rgba(74,222,128,0.4); }
+    .result-banner.lose { color: var(--red-suit); text-shadow: 0 0 24px rgba(212,32,32,0.35); }
+    .result-banner.tie  { color: var(--gold); }
+
+    .result-hands {
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 16px;
+    }
+    .result-hand-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      max-width: 360px;
+    }
+    .result-hand-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+    .result-score {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--white);
+    }
+    .pattern-list {
+      list-style: none;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-height: 24px;
+    }
+    .pattern-list li {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .pattern-list li .pts { color: var(--gold); font-weight: 600; }
+
+    .vs-badge {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--muted);
+      align-self: center;
+      padding: 0 4px;
+    }
+
+    .chip-summary {
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 10px 24px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      text-align: center;
+      min-height: 40px;
+    }
+    .chip-summary.win-chip  { color: #4ade80; }
+    .chip-summary.lose-chip { color: var(--red-suit); }
+    .chip-summary.tie-chip  { color: var(--gold); }
+
+    .chip-row {
+      display: flex;
+      gap: 32px;
+      font-size: 1rem;
+    }
+    .chip-row span { color: var(--muted); }
+    .chip-row b { color: var(--white); }
+
+    .result-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+    /* ── Game Over Screen ─────────────────────────────────────────── */
+    #screen-over { justify-content: center; }
+    .over-wrap {
+      max-width: 540px;
+      width: 100%;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      text-align: center;
+    }
+
+    .over-title {
+      font-size: clamp(2.4rem, 10vw, 4rem);
+      font-weight: 900;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+    }
+    .over-title.win  { color: #4ade80; text-shadow: 0 0 40px rgba(74,222,128,0.4); }
+    .over-title.lose { color: var(--red-suit); }
+
+    .over-sub {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .over-history {
+      width: 100%;
+      background: var(--felt-dark);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      text-align: left;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .history-row {
+      display: flex;
+      gap: 10px;
+      color: var(--muted);
+      align-items: center;
+    }
+    .history-row .badge {
+      font-weight: 700;
+      font-size: 0.75rem;
+      width: 20px;
+      text-align: center;
+    }
+    .badge.W { color: #4ade80; }
+    .badge.L { color: var(--red-suit); }
+    .badge.T { color: var(--gold); }
+
+    .over-stats {
+      display: flex;
+      gap: 24px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .over-stats b { color: var(--gold); }
+
+    /* ── Responsive tweaks ────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .result-hands { flex-direction: column; align-items: center; }
+      .vs-badge { align-self: auto; }
+      .hands-section { flex-direction: column; }
+      .hand-block { width: 100%; }
+      .avail-row .card { width: 86px; height: 120px; }
+      .avail-row .card .c-center { font-size: 34px; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="start" class="screen active">
-      <h1>CARD SURGE</h1>
-      <div class="setup">
-        <div class="field"><label>Difficulty</label><div class="diff"><button class="diff-btn active" data-d="easy">Easy</button><button class="diff-btn" data-d="medium">Medium</button><button class="diff-btn" data-d="hard">Hard</button></div></div>
-        <div class="field"><label>Starting Chips: <input id="chips" type="number" value="40" min="5"></label></div>
-        <div class="field"><label>Ante: <input id="ante" type="number" value="1" min="1"></label></div>
-        <button onclick="startGame()">Deal Cards</button>
-      </div>
-    </div>
 
-    <div id="game" class="screen">
-      <div class="game-header">
-        <span class="stat">Round <span id="round">1</span></span>
-        <span class="stat">Pot <span id="pot">2</span></span>
-        <span class="stat">You <span id="you-chips">40</span></span>
-        <span class="stat">AI <span id="ai-chips">40</span></span>
+  <!-- ── Screen 1: Setup ───────────────────────────────────────── -->
+  <div id="screen-start" class="screen active">
+    <div class="start-wrap">
+      <div class="logo-block">
+        <div class="logo-suits"><span>♠</span> <span>♥</span> <span>♦</span> <span>♣</span></div>
+        <h1 class="logo-text">CARD SURGE</h1>
+        <p class="tagline">Pick cards. Build patterns. Beat the AI.</p>
       </div>
-      <div id="prompt" style="margin: 20px; font-size: 1.2rem;">Your pick!</div>
-      <div class="hand-label">Available</div>
-      <div id="avail" class="cards"></div>
-      <div class="hand-label">Your Hand <span id="you-score"></span></div>
-      <div id="player" class="cards"></div>
-      <div class="hand-label">AI Hand <span id="ai-score"></span></div>
-      <div id="ai" class="cards"></div>
-    </div>
 
-    <div id="result" class="screen">
-      <div class="result">
-        <h2 id="result-title">You Win!</h2>
-        <div class="result-hands">
-          <div class="result-hand"><h3>Your Hand</h3><div id="res-player" class="cards"></div><div id="res-player-score">0 pts</div></div>
-          <div class="vs">VS</div>
-          <div class="result-hand"><h3>AI Hand</h3><div id="res-ai" class="cards"></div><div id="res-ai-score">0 pts</div></div>
+      <div class="setup-panel">
+        <div class="field">
+          <label>Difficulty</label>
+          <div class="diff-group">
+            <button class="diff-btn active" data-d="easy">Easy</button>
+            <button class="diff-btn" data-d="medium">Medium</button>
+            <button class="diff-btn" data-d="hard">Hard</button>
+          </div>
         </div>
-        <div id="chip-change" style="margin: 20px; font-size: 1.1rem;"></div>
-        <div>You: <span id="res-you">40</span> | AI: <span id="res-ai-chips">40</span></div>
-        <div class="buttons">
-          <button onclick="nextRound()">Next Round</button>
-          <button onclick="goHome()">Quit</button>
+        <div class="fields-row">
+          <div class="field">
+            <label for="chips-input">Starting Chips</label>
+            <input type="number" id="chips-input" value="40" min="5" max="999">
+          </div>
+          <div class="field">
+            <label for="ante-input">Ante / Round</label>
+            <input type="number" id="ante-input" value="1" min="1" max="50">
+          </div>
         </div>
+        <button id="btn-deal" class="btn-primary">Deal Cards</button>
+      </div>
+
+      <details class="ref-panel">
+        <summary>Scoring Reference ▾</summary>
+        <div class="ref-grid">
+          <span>1 Pair</span>        <span>15 pts</span>
+          <span>2 Pairs</span>       <span>40 pts</span>
+          <span>3 of a Kind</span>   <span>50 pts</span>
+          <span>Full House</span>    <span>100 pts</span>
+          <span>4 of a Kind</span>   <span>80 pts</span>
+          <span>3-Card Run</span>    <span>10 pts</span>
+          <span>4-Card Run</span>    <span>20 pts</span>
+          <span>5-Card Run</span>    <span>35 pts</span>
+          <span>3 Same Suit</span>   <span>10 pts</span>
+          <span>4 Same Suit</span>   <span>25 pts</span>
+          <span>5 Same Suit</span>   <span>50 pts</span>
+          <span>All Same Color</span><span>20 pts</span>
+          <span class="ref-note" style="grid-column:1/-1">All patterns stack. Ace plays high or low in runs.</span>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ── Screen 2: Game / Picking ──────────────────────────────── -->
+  <div id="screen-game" class="screen">
+    <header class="game-header">
+      <div class="hstat">Round <span id="hd-round">1</span></div>
+      <div class="hstat hpot">Pot&nbsp;<span id="hd-pot">2</span></div>
+      <div class="hstat hyou">You&nbsp;<span id="hd-you">39</span></div>
+      <div class="hstat hai">AI&nbsp;<span id="hd-ai">39</span></div>
+    </header>
+
+    <div class="game-body">
+      <div id="pick-prompt" class="pick-prompt">Your pick!</div>
+
+      <section class="avail-section">
+        <div class="section-label">Available — click to pick</div>
+        <div id="avail-cards" class="card-row avail-row"></div>
+      </section>
+
+      <section class="hands-section">
+        <div class="hand-block">
+          <div class="section-label you-col">
+            Your Hand&nbsp;<span id="you-score-live" class="live-score"></span>
+          </div>
+          <div id="player-hand" class="card-row hand-row"></div>
+        </div>
+        <div class="hand-block">
+          <div class="section-label ai-col">
+            AI Hand&nbsp;<span id="ai-score-live" class="live-score"></span>
+          </div>
+          <div id="ai-hand" class="card-row hand-row"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ── Screen 3: Round Result ─────────────────────────────────── -->
+  <div id="screen-result" class="screen">
+    <div class="result-wrap">
+      <div id="result-banner" class="result-banner">You Win!</div>
+
+      <div class="result-hands">
+        <div class="result-hand-block">
+          <div class="result-hand-label you-col">Your Hand</div>
+          <div id="res-player-cards" class="card-row result-row"></div>
+          <div class="result-score" id="res-player-score">0 pts</div>
+          <ul id="res-player-patterns" class="pattern-list"></ul>
+        </div>
+        <div class="vs-badge">VS</div>
+        <div class="result-hand-block">
+          <div class="result-hand-label ai-col">AI Hand</div>
+          <div id="res-ai-cards" class="card-row result-row"></div>
+          <div class="result-score" id="res-ai-score">0 pts</div>
+          <ul id="res-ai-patterns" class="pattern-list"></ul>
+        </div>
+      </div>
+
+      <div id="chip-summary" class="chip-summary"></div>
+      <div class="chip-row">
+        <span>You: <b id="res-you-chips">40</b> chips</span>
+        <span>AI: <b id="res-ai-chips">40</b> chips</span>
+      </div>
+
+      <div class="result-btns">
+        <button id="btn-next" class="btn-primary">Next Round</button>
+        <button id="btn-quit" class="btn-secondary">Quit</button>
       </div>
     </div>
   </div>
 
+  <!-- ── Screen 4: Game Over ──────────────────────────────────── -->
+  <div id="screen-over" class="screen">
+    <div class="over-wrap">
+      <h2 id="over-title" class="over-title">You Win!</h2>
+      <div id="over-sub" class="over-sub">Placeholder</div>
+
+      <div id="over-history" class="over-history"></div>
+      <div id="over-stats" class="over-stats"></div>
+
+      <button id="btn-again" class="btn-primary">Play Again</button>
+    </div>
+  </div>
+
   <script>
+    'use strict';
+
+    // ── Pure game logic (no DOM) ──────────────────────────────────────
+
     const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
     const SUITS = ['♠','♥','♦','♣'];
-    const VALS = {2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, 10:10, J:11, Q:12, K:13, A:14};
-    let state = {};
+    const RANK_VALUES = Object.fromEntries(RANKS.map((r, i) => [r, i + 2]));
 
     function createDeck() {
-      let d = [];
-      for (let s of SUITS) for (let r of RANKS) d.push({r, s});
+      const deck = [];
+      for (const suit of SUITS)
+        for (const rank of RANKS)
+          deck.push({ rank, suit });
+      return deck;
+    }
+
+    function shuffle(deck) {
+      const d = [...deck];
+      for (let i = d.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [d[i], d[j]] = [d[j], d[i]];
+      }
       return d;
     }
 
-    function shuffle(d) {
-      d = [...d];
-      for (let i = d.length-1; i > 0; i--) { let j = Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
-      return d;
+    function cardValue(card) { return RANK_VALUES[card.rank]; }
+
+    function cardColor(card) {
+      return (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
     }
 
-    function cardColor(c) { return c.s === '♥' || c.s === '♦' ? 'red' : 'black'; }
+    // ── Scoring ───────────────────────────────────────────────────────
+
+    function rankCounts(hand) {
+      const c = {};
+      for (const card of hand) c[card.rank] = (c[card.rank] || 0) + 1;
+      return c;
+    }
+
+    function suitCounts(hand) {
+      const c = {};
+      for (const card of hand) c[card.suit] = (c[card.suit] || 0) + 1;
+      return c;
+    }
+
+    function scorePairs(hand) {
+      const counts = rankCounts(hand);
+      const groups = Object.values(counts).sort((a, b) => b - a);
+      const threes = groups.filter(c => c === 3).length;
+      const twos   = groups.filter(c => c === 2).length;
+      const fours  = groups.filter(c => c === 4).length;
+
+      if (fours  > 0)            return [{ name: '4 of a Kind',  points: 80  }];
+      if (threes > 0 && twos > 0) return [{ name: 'Full House',  points: 100 }];
+      if (threes > 0)             return [{ name: '3 of a Kind', points: 50  }];
+      if (twos >= 2)              return [{ name: '2 Pairs',     points: 40  }];
+      if (twos === 1)             return [{ name: '1 Pair',      points: 15  }];
+      return [];
+    }
+
+    function scoreRuns(hand) {
+      const vals = hand.map(cardValue);
+      let uniqueVals = [...new Set(vals)].sort((a, b) => a - b);
+      const candidates = [uniqueVals];
+      if (vals.includes(14)) {
+        const low = [...new Set(uniqueVals.map(v => v === 14 ? 1 : v))].sort((a, b) => a - b);
+        candidates.push(low);
+      }
+      let bestRun = 0;
+      for (const vs of candidates) {
+        let run = 1;
+        for (let i = 1; i < vs.length; i++) {
+          if (vs[i] === vs[i - 1] + 1) {
+            run++;
+          } else if (vs[i] !== vs[i - 1]) {
+            bestRun = Math.max(bestRun, run);
+            run = 1;
+          }
+        }
+        bestRun = Math.max(bestRun, run);
+      }
+      if (bestRun >= 5) return [{ name: '5-Card Run', points: 35 }];
+      if (bestRun === 4) return [{ name: '4-Card Run', points: 20 }];
+      if (bestRun === 3) return [{ name: '3-Card Run', points: 10 }];
+      return [];
+    }
+
+    function scoreSuitPower(hand) {
+      const max = Math.max(...Object.values(suitCounts(hand)));
+      if (max >= 5) return [{ name: '5 Same Suit', points: 50 }];
+      if (max === 4) return [{ name: '4 Same Suit', points: 25 }];
+      if (max === 3) return [{ name: '3 Same Suit', points: 10 }];
+      return [];
+    }
+
+    function scoreColorBonus(hand) {
+      const allRed   = hand.every(c => cardColor(c) === 'red');
+      const allBlack = hand.every(c => cardColor(c) === 'black');
+      if (allRed || allBlack) return [{ name: 'All Same Color', points: 20 }];
+      return [];
+    }
+
+    function tiebreaker(hand) {
+      let pts = 0;
+      for (const c of hand) {
+        if (['J','Q','K'].includes(c.rank)) pts += 1;
+        if (c.rank === 'A') pts += 2;
+      }
+      return pts;
+    }
 
     function scoreHand(hand) {
-      if (!hand || !hand.length) return {total: 0, patterns: []};
-      let patterns = [];
-      let ranks = {}, suits = {};
-      for (let c of hand) { ranks[c.r] = (ranks[c.r]||0)+1; suits[c.s] = (suits[c.s]||0)+1; }
-      let rv = Object.values(ranks).sort((a,b)=>b-a);
-      if (rv[0]===4) patterns.push({name: '4 of a kind', pts: 80});
-      else if (rv[0]===3 && rv[1]===2) patterns.push({name: 'Full house', pts: 100});
-      else if (rv[0]===3) patterns.push({name: '3 of a kind', pts: 50});
-      else if (rv[0]===2 && rv[1]===2) patterns.push({name: '2 pairs', pts: 40});
-      else if (rv[0]===2) patterns.push({name: 'Pair', pts: 15});
-      let vals = [...new Set(hand.map(c=>VALS[c.r]))].sort((a,b)=>a-b);
-      let run = 0, maxrun = 0;
-      for (let i=0; i<vals.length; i++) { if (i===0 || vals[i]===vals[i-1]+1) run++; else run = 1; maxrun = Math.max(maxrun, run); }
-      if (maxrun===5) patterns.push({name: '5-run', pts: 35});
-      else if (maxrun===4) patterns.push({name: '4-run', pts: 20});
-      else if (maxrun===3) patterns.push({name: '3-run', pts: 10});
-      let sv = Object.values(suits).sort((a,b)=>b-a);
-      if (sv[0]===5) patterns.push({name: '5-suit', pts: 50});
-      else if (sv[0]===4) patterns.push({name: '4-suit', pts: 25});
-      else if (sv[0]===3) patterns.push({name: '3-suit', pts: 10});
-      let allRed = hand.every(c=>c.s==='♥'||c.s==='♦');
-      let allBlack = hand.every(c=>c.s==='♠'||c.s==='♣');
-      if (allRed || allBlack) patterns.push({name: 'Color', pts: 20});
-      return {total: patterns.reduce((s,p)=>s+p.pts,0), patterns};
+      if (!hand || hand.length === 0) return { total: 0, tiebreaker: 0, patterns: [] };
+      const patterns = [
+        ...scorePairs(hand),
+        ...scoreRuns(hand),
+        ...scoreSuitPower(hand),
+        ...scoreColorBonus(hand),
+      ];
+      return {
+        total: patterns.reduce((s, p) => s + p.points, 0),
+        tiebreaker: tiebreaker(hand),
+        patterns,
+      };
     }
 
-    function makeCard(c, click) {
-      let el = document.createElement('div');
-      el.className = 'card '+cardColor(c);
-      el.innerHTML = `<span class="rank">${c.r}</span><span class="suit">${c.s}</span><span class="rank">${c.r}</span>`;
-      if (click) el.onclick = click;
-      return el;
+    // ── AI ────────────────────────────────────────────────────────────
+
+    function easyPick(available) {
+      return available[Math.floor(Math.random() * available.length)];
+    }
+
+    function mediumPick(available, aiHand, playerHand) {
+      let bestVal = -1, bestCard = available[0];
+      for (const card of available) {
+        const myScore = scoreHand([...aiHand, card]).total;
+        const blockScore = scoreHand([...playerHand, card]).total;
+        const val = myScore + blockScore * 0.4;
+        if (val > bestVal) { bestVal = val; bestCard = card; }
+      }
+      return bestCard;
+    }
+
+    function estimateFuture(hand, pool, picksLeft) {
+      if (picksLeft <= 0 || pool.length === 0) return 0;
+      const cur = scoreHand(hand).total;
+      let best = cur;
+      for (const c of pool.slice(0, 8)) {
+        const s = scoreHand([...hand, c]).total;
+        if (s > best) best = s;
+      }
+      return Math.max(0, best - cur);
+    }
+
+    function hardPick(available, aiHand, playerHand) {
+      const picksLeft = 4 - aiHand.length;
+      const curPlayerScore = scoreHand(playerHand).total;
+      const curMyScore = scoreHand(aiHand).total;
+      const blockWeight = curPlayerScore > curMyScore ? 0.7 : 0.35;
+
+      let bestVal = -Infinity, bestCard = available[0];
+      for (const card of available) {
+        const myScore = scoreHand([...aiHand, card]).total;
+        const future = estimateFuture([...aiHand, card], available.filter(c => c !== card), picksLeft);
+        const blockDelta = scoreHand([...playerHand, card]).total - scoreHand(playerHand).total;
+        const val = myScore + future * 0.5 + blockDelta * blockWeight;
+        if (val > bestVal) { bestVal = val; bestCard = card; }
+      }
+      return bestCard;
+    }
+
+    function pickCard(difficulty, available, aiHand, playerHand) {
+      if (difficulty === 'easy')   return easyPick(available);
+      if (difficulty === 'medium') return mediumPick(available, aiHand, playerHand);
+      return hardPick(available, aiHand, playerHand);
+    }
+
+    // ── DOM App ───────────────────────────────────────────────────────
+
+    let G = {}; // game state
+
+    function newGame(difficulty, startingChips, anteAmount) {
+      G = {
+        difficulty,
+        startingChips,
+        anteAmount,
+        playerChips: startingChips,
+        aiChips: startingChips,
+        pot: 0,
+        round: 0,
+        history: [],
+        playerHand: [],
+        aiHand: [],
+        deck: [],
+        available: [],
+        picking: false,
+      };
     }
 
     function show(id) {
@@ -144,127 +873,305 @@
       document.getElementById(id).classList.add('active');
     }
 
-    function startGame() {
-      let d = document.querySelector('.diff-btn.active').dataset.d;
-      let ch = parseInt(document.getElementById('chips').value) || 40;
-      let a = parseInt(document.getElementById('ante').value) || 1;
-      state = {difficulty: d, startChips: ch, ante: a, you: ch, ai: ch, pot: 0, round: 0, yourHand: [], aiHand: [], deck: [], avail: [], history: []};
-      nextRound();
-    }
+    function makeCard(card, opts = {}) {
+      const el = document.createElement('div');
+      el.className = `card ${cardColor(card)} deal-in`;
+      if (opts.pickable) el.classList.add('pickable');
+      if (opts.disabled) el.classList.add('disabled');
 
-    function nextRound() {
-      state.round++;
-      state.yourHand = [];
-      state.aiHand = [];
-      state.deck = shuffle(createDeck());
-      state.you -= state.ante;
-      state.ai -= state.ante;
-      state.pot = state.ante * 2;
-      document.getElementById('round').textContent = state.round;
-      document.getElementById('you-chips').textContent = state.you;
-      document.getElementById('ai-chips').textContent = state.ai;
-      document.getElementById('pot').textContent = state.pot;
-      show('game');
-      dealCards();
-    }
+      const rank = card.rank;
+      const suit = card.suit;
 
-    function dealCards() {
-      if (state.yourHand.length === 5) { showResult(); return; }
-      state.avail = state.deck.splice(0, 2);
-      document.getElementById('avail').innerHTML = '';
-      for (let i=0; i<state.avail.length; i++) {
-        let c = state.avail[i];
-        document.getElementById('avail').appendChild(makeCard(c, ()=>pickCard(i)));
+      el.innerHTML = `
+        <div class="c-tl"><span class="c-rank">${rank}</span><span class="c-suit-sm">${suit}</span></div>
+        <div class="c-center">${suit}</div>
+        <div class="c-br"><span class="c-rank">${rank}</span><span class="c-suit-sm">${suit}</span></div>
+      `;
+
+      if (opts.onClick) {
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', opts.onClick);
       }
-      let ys = scoreHand(state.yourHand);
-      let as = scoreHand(state.aiHand);
-      document.getElementById('you-score').textContent = state.yourHand.length ? ys.total + ' pts' : '';
-      document.getElementById('ai-score').textContent = state.aiHand.length ? as.total + ' pts' : '';
-      renderHands();
-      document.getElementById('prompt').textContent = 'Your pick!';
+
+      el.addEventListener('animationend', () => el.classList.remove('deal-in'), { once: true });
+      return el;
     }
 
-    function pickCard(i) {
-      let c = state.avail[i];
-      state.yourHand.push(c);
-      state.avail = state.avail.filter(x=>x!==c);
-      renderHands();
-      document.getElementById('prompt').textContent = 'AI thinking...';
-      setTimeout(() => {
-        let ai = state.avail[0];
-        if (state.difficulty === 'medium') {
-          let best = -1, pick = ai;
-          for (let card of state.avail) {
-            let sc = scoreHand([...state.aiHand, card]).total;
-            if (sc > best) { best = sc; pick = card; }
-          }
-          ai = pick;
-        }
-        state.aiHand.push(ai);
-        state.avail = [];
-        renderHands();
-        dealCards();
-      }, 600);
+    function renderCards(containerId, cards, opts = {}) {
+      const el = document.getElementById(containerId);
+      el.innerHTML = '';
+      for (const card of cards) {
+        el.appendChild(makeCard(card, opts));
+      }
     }
 
-    function renderHands() {
-      document.getElementById('player').innerHTML = '';
-      for (let c of state.yourHand) document.getElementById('player').appendChild(makeCard(c, null));
-      document.getElementById('ai').innerHTML = '';
-      for (let c of state.aiHand) document.getElementById('ai').appendChild(makeCard(c, null));
+    function updateHUD() {
+      document.getElementById('hd-round').textContent = G.round;
+      document.getElementById('hd-pot').textContent   = G.pot + ' chips';
+      document.getElementById('hd-you').textContent   = G.playerChips;
+      document.getElementById('hd-ai').textContent    = G.aiChips;
     }
 
-    function showResult() {
-      let ys = scoreHand(state.yourHand);
-      let as = scoreHand(state.aiHand);
-      let winner = ys.total > as.total ? 'you' : as.total > ys.total ? 'ai' : 'tie';
-      document.getElementById('result-title').textContent = winner === 'you' ? 'You Win!' : winner === 'ai' ? 'AI Wins' : 'Tie';
-      document.getElementById('res-player').innerHTML = '';
-      for (let c of state.yourHand) document.getElementById('res-player').appendChild(makeCard(c, null));
-      document.getElementById('res-player-score').textContent = ys.total + ' pts';
-      document.getElementById('res-ai').innerHTML = '';
-      for (let c of state.aiHand) document.getElementById('res-ai').appendChild(makeCard(c, null));
-      document.getElementById('res-ai-score').textContent = as.total + ' pts';
-      if (winner === 'you') {
-        state.you += state.pot;
-        document.getElementById('chip-change').textContent = 'You won! +' + (state.pot - state.ante);
+    function updateLiveScores() {
+      const ps = scoreHand(G.playerHand);
+      const as = scoreHand(G.aiHand);
+      const you = document.getElementById('you-score-live');
+      const ai  = document.getElementById('ai-score-live');
+      you.textContent = G.playerHand.length ? ps.total + ' pts' : '';
+      ai.textContent  = G.aiHand.length    ? as.total + ' pts' : '';
+    }
+
+    function startRound() {
+      G.round++;
+      G.playerHand = [];
+      G.aiHand = [];
+      G.deck = shuffle(createDeck());
+
+      const ante = Math.min(G.anteAmount, G.playerChips, G.aiChips);
+      G.playerChips -= ante;
+      G.aiChips -= ante;
+      G.pot = ante * 2;
+
+      show('screen-game');
+      updateHUD();
+      document.getElementById('player-hand').innerHTML = '';
+      document.getElementById('ai-hand').innerHTML = '';
+      document.getElementById('you-score-live').textContent = '';
+      document.getElementById('ai-score-live').textContent = '';
+
+      nextPick();
+    }
+
+    function nextPick() {
+      if (G.playerHand.length === 5) {
+        setTimeout(showRoundResult, 300);
+        return;
+      }
+
+      G.available = G.deck.splice(0, 2);
+      renderAvailable(true);
+      setPrompt('Your pick!', false);
+    }
+
+    function renderAvailable(pickable) {
+      const el = document.getElementById('avail-cards');
+      el.innerHTML = '';
+      for (let i = 0; i < G.available.length; i++) {
+        const card = G.available[i];
+        const cardEl = makeCard(card, {
+          onClick: pickable ? () => onPlayerPick(card) : null,
+        });
+        el.appendChild(cardEl);
+      }
+    }
+
+    function onPlayerPick(card) {
+      if (!G.picking) return;
+      G.picking = false;
+
+      renderAvailable(false);
+
+      G.playerHand.push(card);
+      G.available = G.available.filter(c => c !== card);
+
+      renderCards('player-hand', G.playerHand);
+      updateLiveScores();
+
+      setPrompt('AI is thinking…', true);
+
+      setTimeout(doAIPick, 700);
+    }
+
+    function doAIPick() {
+      const aiCard = pickCard(G.difficulty, G.available, G.aiHand, G.playerHand);
+      G.aiHand.push(aiCard);
+      G.available = [];
+
+      renderCards('ai-hand', G.aiHand);
+      updateLiveScores();
+
+      document.getElementById('avail-cards').innerHTML = '';
+
+      nextPick();
+    }
+
+    function setPrompt(text, waiting) {
+      const el = document.getElementById('pick-prompt');
+      el.textContent = text;
+      el.classList.toggle('waiting', waiting);
+      G.picking = !waiting;
+    }
+
+    function showRoundResult() {
+      const ps = scoreHand(G.playerHand);
+      const as = scoreHand(G.aiHand);
+
+      let winner;
+      if      (ps.total > as.total) winner = 'player';
+      else if (as.total > ps.total) winner = 'ai';
+      else if (ps.tiebreaker > as.tiebreaker) winner = 'player';
+      else if (as.tiebreaker > ps.tiebreaker) winner = 'ai';
+      else winner = 'tie';
+
+      const potWon = G.pot;
+      const ante   = G.anteAmount;
+      const net    = potWon - ante;
+
+      if (winner === 'player') {
+        G.playerChips += potWon;
       } else if (winner === 'ai') {
-        state.ai += state.pot;
-        document.getElementById('chip-change').textContent = 'AI won. -' + (state.pot - state.ante);
+        G.aiChips += potWon;
       } else {
-        state.you += state.ante;
-        state.ai += state.ante;
-        document.getElementById('chip-change').textContent = 'Tie!';
+        G.playerChips += ante;
+        G.aiChips += ante;
       }
-      document.getElementById('res-you').textContent = state.you;
-      document.getElementById('res-ai-chips').textContent = state.ai;
-      state.history.push({round: state.round, result: winner, ys: ys.total, as: as.total});
-      if (state.you <= 0 || state.ai <= 0) {
-        setTimeout(() => show('result'), 500);
-        setTimeout(() => gameOver(), 3000);
+      G.pot = 0;
+
+      const bestPattern = ps.patterns.length
+        ? ps.patterns.reduce((a, b) => a.points > b.points ? a : b).name
+        : null;
+      G.history.push({
+        round: G.round, result: winner,
+        playerScore: ps.total, aiScore: as.total,
+        playerBestPattern: bestPattern,
+      });
+
+      const banner = document.getElementById('result-banner');
+      if (winner === 'player') {
+        banner.textContent = 'You Win!';
+        banner.className = 'result-banner win';
+      } else if (winner === 'ai') {
+        banner.textContent = 'AI Wins';
+        banner.className = 'result-banner lose';
       } else {
-        show('result');
+        banner.textContent = 'Tie!';
+        banner.className = 'result-banner tie';
+      }
+
+      renderCards('res-player-cards', G.playerHand);
+      renderCards('res-ai-cards', G.aiHand);
+
+      document.getElementById('res-player-score').textContent = ps.total + ' pts';
+      document.getElementById('res-ai-score').textContent     = as.total + ' pts';
+
+      renderPatterns('res-player-patterns', ps.patterns);
+      renderPatterns('res-ai-patterns', as.patterns);
+
+      const summary = document.getElementById('chip-summary');
+      if (winner === 'player') {
+        summary.textContent = `You won the pot! Net gain: +${net} chip${net !== 1 ? 's' : ''}`;
+        summary.className = 'chip-summary win-chip';
+      } else if (winner === 'ai') {
+        summary.textContent = `AI won the pot. Net loss: −${net} chip${net !== 1 ? 's' : ''}`;
+        summary.className = 'chip-summary lose-chip';
+      } else {
+        summary.textContent = 'Tie — antes returned to both players.';
+        summary.className = 'chip-summary tie-chip';
+      }
+
+      document.getElementById('res-you-chips').textContent = G.playerChips;
+      document.getElementById('res-ai-chips').textContent  = G.aiChips;
+
+      const isOver = G.playerChips <= 0 || G.aiChips <= 0;
+      document.getElementById('btn-next').style.display = isOver ? 'none' : '';
+
+      show('screen-result');
+    }
+
+    function renderPatterns(id, patterns) {
+      const el = document.getElementById(id);
+      el.innerHTML = '';
+      if (!patterns.length) {
+        el.innerHTML = '<li style="color:rgba(122,154,122,0.5)">No patterns</li>';
+        return;
+      }
+      for (const p of patterns) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="pts">+${p.points}</span> ${p.name}`;
+        el.appendChild(li);
       }
     }
 
-    function gameOver() {
-      let w = state.you > 0 ? 'YOU WIN!' : 'AI WINS';
-      alert(w + '\nRounds: ' + state.round + '\nYou: ' + state.you + ' | AI: ' + state.ai);
-      goHome();
+    function showGameOver() {
+      const winner = G.playerChips > 0 ? 'player' : 'ai';
+
+      const title = document.getElementById('over-title');
+      if (winner === 'player') {
+        title.textContent = 'You Win!';
+        title.className = 'over-title win';
+      } else {
+        title.textContent = 'AI Wins';
+        title.className = 'over-title lose';
+      }
+
+      document.getElementById('over-sub').textContent =
+        `${G.round} round${G.round !== 1 ? 's' : ''} played  ·  Final chips — You: ${G.playerChips}  AI: ${G.aiChips}`;
+
+      const hist = document.getElementById('over-history');
+      hist.innerHTML = '';
+      for (const r of G.history) {
+        const row = document.createElement('div');
+        row.className = 'history-row';
+        const badge = r.result === 'player' ? 'W' : r.result === 'ai' ? 'L' : 'T';
+        const best = r.playerBestPattern || 'no pattern';
+        row.innerHTML = `
+          <span class="badge ${badge}">${badge}</span>
+          <span>Round ${r.round}</span>
+          <span style="color:var(--white)">You: ${r.playerScore}pts</span>
+          <span style="color:var(--muted);font-size:0.75rem">(${best})</span>
+          <span style="margin-left:auto">AI: ${r.aiScore}pts</span>
+        `;
+        hist.appendChild(row);
+      }
+
+      const wins   = G.history.filter(r => r.result === 'player').length;
+      const losses = G.history.filter(r => r.result === 'ai').length;
+      const ties   = G.history.filter(r => r.result === 'tie').length;
+      const scores = G.history.map(r => r.playerScore);
+      const avg    = scores.length ? (scores.reduce((a, b) => a + b) / scores.length).toFixed(1) : 0;
+      const best   = scores.length ? Math.max(...scores) : 0;
+
+      document.getElementById('over-stats').innerHTML =
+        `<b>${wins}W</b> / ${losses}L / ${ties}T &nbsp;·&nbsp; Avg: <b>${avg}pts</b> &nbsp;·&nbsp; Best hand: <b>${best}pts</b>`;
+
+      show('screen-over');
     }
 
-    function goHome() {
-      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('[data-d="easy"]').classList.add('active');
-      show('start');
-    }
+    // ── Event wiring ──────────────────────────────────────────────────
 
-    document.querySelectorAll('.diff-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      document.getElementById('btn-deal').addEventListener('click', () => {
+        const difficulty    = document.querySelector('.diff-btn.active').dataset.d;
+        const startingChips = parseInt(document.getElementById('chips-input').value) || 40;
+        const anteAmount    = parseInt(document.getElementById('ante-input').value)  || 1;
+        newGame(difficulty, startingChips, anteAmount);
+        startRound();
+      });
+
+      document.getElementById('btn-next').addEventListener('click', () => {
+        if (G.playerChips <= 0 || G.aiChips <= 0) {
+          showGameOver();
+        } else {
+          startRound();
+        }
+      });
+
+      document.getElementById('btn-quit').addEventListener('click', () => {
+        showGameOver();
+      });
+
+      document.getElementById('btn-again').addEventListener('click', () => {
+        show('screen-start');
       });
     });
   </script>
+
 </body>
 </html>
