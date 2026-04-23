@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Surge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── Screen 1: Setup ───────────────────────────────────────── -->
+  <div id="screen-start" class="screen active">
+    <div class="start-wrap">
+      <div class="logo-block">
+        <div class="logo-suits">♠ ♥ ♦ ♣</div>
+        <h1 class="logo-text">CARD SURGE</h1>
+        <p class="tagline">Pick cards. Build patterns. Beat the AI.</p>
+      </div>
+
+      <div class="setup-panel">
+        <div class="field">
+          <label>Difficulty</label>
+          <div class="diff-group">
+            <button class="diff-btn active" data-d="easy">Easy</button>
+            <button class="diff-btn" data-d="medium">Medium</button>
+            <button class="diff-btn" data-d="hard">Hard</button>
+          </div>
+        </div>
+        <div class="fields-row">
+          <div class="field">
+            <label for="chips-input">Starting Chips</label>
+            <input type="number" id="chips-input" value="40" min="5" max="999">
+          </div>
+          <div class="field">
+            <label for="ante-input">Ante / Round</label>
+            <input type="number" id="ante-input" value="1" min="1" max="50">
+          </div>
+        </div>
+        <button id="btn-deal" class="btn-primary">Deal Cards</button>
+      </div>
+
+      <details class="ref-panel">
+        <summary>Scoring Reference ▾</summary>
+        <div class="ref-grid">
+          <span>1 Pair</span>        <span>15 pts</span>
+          <span>2 Pairs</span>       <span>40 pts</span>
+          <span>3 of a Kind</span>   <span>50 pts</span>
+          <span>Full House</span>    <span>100 pts</span>
+          <span>4 of a Kind</span>   <span>80 pts</span>
+          <span>3-Card Run</span>    <span>10 pts</span>
+          <span>4-Card Run</span>    <span>20 pts</span>
+          <span>5-Card Run</span>    <span>35 pts</span>
+          <span>3 Same Suit</span>   <span>10 pts</span>
+          <span>4 Same Suit</span>   <span>25 pts</span>
+          <span>5 Same Suit</span>   <span>50 pts</span>
+          <span>All Same Color</span><span>20 pts</span>
+          <span class="ref-note" style="grid-column:1/-1">All patterns stack. Ace plays high or low in runs.</span>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ── Screen 2: Game / Picking ──────────────────────────────── -->
+  <div id="screen-game" class="screen">
+    <header class="game-header">
+      <div class="hstat">Round <span id="hd-round">1</span></div>
+      <div class="hstat hpot">Pot&nbsp;<span id="hd-pot">2</span></div>
+      <div class="hstat hyou">You&nbsp;<span id="hd-you">39</span></div>
+      <div class="hstat hai">AI&nbsp;<span id="hd-ai">39</span></div>
+    </header>
+
+    <div class="game-body">
+      <div id="pick-prompt" class="pick-prompt">Your pick!</div>
+
+      <section class="avail-section">
+        <div class="section-label">Available — click to pick</div>
+        <div id="avail-cards" class="card-row avail-row"></div>
+      </section>
+
+      <section class="hands-section">
+        <div class="hand-block">
+          <div class="section-label you-col">
+            Your Hand&nbsp;<span id="you-score-live" class="live-score"></span>
+          </div>
+          <div id="player-hand" class="card-row hand-row"></div>
+        </div>
+        <div class="hand-block">
+          <div class="section-label ai-col">
+            AI Hand&nbsp;<span id="ai-score-live" class="live-score"></span>
+          </div>
+          <div id="ai-hand" class="card-row hand-row"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ── Screen 3: Round Result ─────────────────────────────────── -->
+  <div id="screen-result" class="screen">
+    <div class="result-wrap">
+      <div id="result-banner" class="result-banner">You Win!</div>
+
+      <div class="result-hands">
+        <div class="result-hand-block">
+          <div class="result-hand-label you-col">Your Hand</div>
+          <div id="res-player-cards" class="card-row result-row"></div>
+          <div id="res-player-score" class="result-score">0 pts</div>
+          <ul id="res-player-patterns" class="pattern-list"></ul>
+        </div>
+        <div class="vs-badge">VS</div>
+        <div class="result-hand-block">
+          <div class="result-hand-label ai-col">AI Hand</div>
+          <div id="res-ai-cards" class="card-row result-row"></div>
+          <div id="res-ai-score" class="result-score">0 pts</div>
+          <ul id="res-ai-patterns" class="pattern-list"></ul>
+        </div>
+      </div>
+
+      <div id="chip-summary" class="chip-summary"></div>
+
+      <div class="chip-row">
+        <span class="you-col">You: <b id="res-you-chips">40</b></span>
+        <span class="ai-col">AI: <b id="res-ai-chips">40</b></span>
+      </div>
+
+      <div class="result-btns">
+        <button id="btn-next" class="btn-primary">Next Round</button>
+        <button id="btn-quit" class="btn-secondary">Quit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Screen 4: Game Over ────────────────────────────────────── -->
+  <div id="screen-over" class="screen">
+    <div class="over-wrap">
+      <div id="over-title" class="over-title">YOU WIN!</div>
+      <div id="over-sub" class="over-sub"></div>
+      <div id="over-history" class="over-history"></div>
+      <div id="over-stats" class="over-stats"></div>
+      <button id="btn-again" class="btn-primary">Play Again</button>
+    </div>
+  </div>
+
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
